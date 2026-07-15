@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The One with the Date?</title>
+    <style>
+        :root {
+            --primary-color: #ff4d6d;
+            /* Updated to the new light blue background */
+            --bg-color: #e0f2fe; 
+            --card-bg: #ffffff;
+            --text-color: #2d2d2d;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-user-select: none;
+            user-select: none;
+            transition: filter 0.3s ease;
+        }
+
+        body.blurred {
+            filter: blur(25px);
+        }
+
+        .blur-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 480px;
+            position: relative;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        h1, h2, h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+
+        .ross-tone-msg {
+            font-style: italic;
+            color: #555;
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 85%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            outline: none;
+            text-align: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: transform 0.1s ease, background-color 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.95);
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .gif-container {
+            margin: 15px 0;
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+        }
+
+        .gif-container img {
+            max-width: 100%;
+            max-height: 220px;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        /* Trivia styling */
+        .timer-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .timer-progress {
+            width: 100%;
+            height: 100%;
+            background-color: var(--primary-color);
+            transition: width 1s linear;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .option-btn {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 2px solid transparent;
+            text-align: left;
+            padding: 15px;
+        }
+
+        .option-btn:hover {
+            background-color: #e5e5e5;
+        }
+
+        /* Moving Button Layout */
+        .proposal-btns {
+            margin-top: 30px;
+            height: 120px;
+            position: relative;
+        }
+
+        #yesBtn, #noBtn {
+            position: absolute;
+            padding: 15px 30px;
+            font-size: 18px;
+        }
+
+        #yesBtn {
+            background-color: #4caf50;
+            color: white;
+            left: 20px;
+            top: 20px;
+        }
+
+        #noBtn {
+            background-color: var(--primary-color);
+            color: white;
+            right: 20px;
+            top: 20px;
+            transition: left 0.15s ease, top 0.15s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="blurOverlay" class="blur-overlay">
+        🚫 NO PEEKING!<br>Monica would never cheat on a quiz. Get back in here!
+    </div>
+
+    <div class="card">
+        
+        <div id="loading" class="section active">
+            <h2>Initializing standard operating protocols...</h2>
+            <div class="gif-container">
+                <img src="https://media.tenor.com/Wex60tV3S7UAAAAC/friends-rachel-green.gif" alt="Initializing">
+            </div>
+            <p>Wait for it...</p>
+        </div>
+
+        <div id="round1" class="section">
+            <h2>Welcome! 👋</h2>
+            
+            <div class="ross-tone-msg">
+                "Hey... I can see you've been working a lot, like, non-stop. So, I don't know, I just... I wanted to build a little something to try and give you a reason to smile a bit extra today. I guess... I hope it works."
+            </div>
+
+            <div class="gif-container">
+                <img src="https://media.tenor.com/B94_8L6vB68AAAAC/friends-ross.gif" alt="Ross meets Rachel S1E1">
+            </div>
+
+            <p><strong>To unlock the gate: What is the name of the Food we had?</strong></p>
+            <input type="text" id="passcodeInput" placeholder="Enter answer here...">
+            <br>
+            <button class="btn-primary" onclick="verifyIdentity()">Unlock Quiz</button>
+            
+            <div id="wrongAnsFeedback" style="display: none; margin-top: 15px;">
+                <p style="color: red; font-weight: bold;">🚨 We were on a Break!!!!!!!!</p>
+                <div class="gif-container">
+                    <img src="https://media.tenor.com/T0_M28Y_vGgAAAAC/how-you-doin-friends.gif" alt="We were on a break!">
+                </div>
+            </div>
+        </div>
+
+        <div id="passcodeSuccess" class="section">
+            <h2>How you doing!!!!! 😏</h2>
+            <div class="gif-container">
+                <img src="https://media.tenor.com/W-m8J8P0_8AAAAAC/joey-nod.gif" alt="How you doin">
+            </div>
+            <p>Spot on! Trivia starting in 3 seconds...</p>
+        </div>
+
+        <div id="round2" class="section">
+            <h2 id="questionNum">Question 1 of 5</h2>
+            <div class="timer-bar"><div id="timerProgress" class="timer-progress"></div></div>
+            <p id="questionText" style="font-size: 18px; font-weight: bold;"></p>
+            <div class="quiz-options" id="quizOptions"></div>
+        </div>
+
+        <div id="answerCelebration" class="section">
+            <h2>Correct! 🎉</h2>
+            <div class="gif-container">
+                <img id="celebrationGif" src="" alt="Celebration GIF">
+            </div>
+            <p>You nailed that one! Moving to the next question...</p>
+        </div>
+
+        <div id="proposal" class="section">
+            <h2>A Little Note For You... ❤️</h2>
+            <p style="text-align: left; line-height: 1.6; font-size: 15px; color: #444; margin-bottom: 20px;">
+                You asked for some time to figure things out, and honestly, I don't know if I am giving you enough of it. But I really like to see you and discuss things. So...
+            </p>
+            <h3>Shall we meet on Friday @6.30?</h3>
+            
+            <p id="teasingText" style="color: #ff4d6d; font-weight: bold; min-height: 24px; margin: 10px 0;"></p>
+            
+            <div class="gif-container" id="waitingGifContainer" style="display: none;">
+                <img id="waitingGif" src="" alt="Waiting GIF">
+            </div>
+
+            <div class="proposal-btns">
+                <button id="yesBtn" onclick="submitDecision('YES')">Yes! ❤️</button>
+                <button id="noBtn" onmouseover="dodgeButton()" ontouchstart="dodgeButton(event)">No 💔</button>
+            </div>
+        </div>
+
+        <div id="outcomeYes" class="section">
+            <h2>Woohoo! 🎉</h2>
+            <div class="gif-container">
+                <img src="https://media.tenor.com/839z5_9v96YAAAAC/friends-happy.gif" alt="Celebration">
+            </div>
+            <p>Excellent! I'll bring the cups, you bring the ice! ☕</p>
+            <p>I am locking in our Friday slot!</p>
+        </div>
+
+        <div id="outcomeNo" class="section">
+            <h2>Fine! 🍕</h2>
+            <div class="gif-container">
+                <img src="https://media.tenor.com/7b79FayqYtcAAAAC/pizza-joey-tribbiani.gif" alt="Joey Rejection">
+            </div>
+            <p>Joey doesn't share food anyway! More pizza for me. 😉</p>
+            <p>(Just kidding! See you Friday?)</p>
+        </div>
+
+    </div>
+
+    <script>
+        // Set configuration details first
+        const CORRECT_PASSCODE = "chicken cheese barbeque"; 
+        const FORMSPREE_ID = "YOUR_FORMSPREE_ID_HERE"; 
+
+        // Hardcore Deep-Cut Trivia
+        const triviaQuestions = [
+            {
+                q: "What is the name of Chandler's mother's bestselling romance novel?",
+                options: ["Euphoria", "Mistress Bitch", "The Sweet Caress", "Secret Desires"],
+                answer: "Mistress Bitch"
+            },
+            {
+                q: "Which of Monica's towels is reserved for guest use only?",
+                options: ["Fancy", "Guest", "Fancy Guest", "None, they are all numbered!"],
+                answer: "Fancy Guest"
+            },
+            {
+                q: "What is the name of Joey's bedtime penguin pal?",
+                options: ["Waddle", "Huggsy", "Chilly", "Pingu"],
+                answer: "Huggsy"
+            },
+            {
+                q: "Who was Chandler’s TV guide addressed to?",
+                options: ["Chandler Bing", "Miss Chanandler Bong", "C. Bing", "Channy Bong"],
+                answer: "Miss Chanandler Bong"
+            },
+            {
+                q: "What is the scientific name for the 'smelly cat' Phoebe sings about?",
+                options: ["Felis catus", "Just a smelly cat!", "It's not his fault", "The vet's nightmare"],
+                answer: "It's not his fault"
+            }
+        ];
+
+        // GIFs to cycle through when she gets a trivia question correct
+        const correctGifs = [
+            "https://media.tenor.com/L-Gz5GzG3HIAAAAC/friends-joey.gif", // Joey happy dance
+            "https://media.tenor.com/Kdfu-pInFasAAAAC/phoebe-friends.gif", // Phoebe celebration
+            "https://media.tenor.com/13_Rz9t6p_8AAAAC/excited-yes.gif", // Monica cheering
+            "https://media.tenor.com/079npxFfD_4AAAAC/friends-chandler-bing.gif", // Chandler dance
+            "https://media.tenor.com/n67hHk1qZ8IAAAAC/rachel-clapping-friends.gif"  // Rachel clapping
+        ];
+
+        // GIFs and captions for the 'waiting' sequence (as she keeps trying to click "No")
+        const waitingGifs = [
+            "https://media.tenor.com/Fbe7o3f8p2kAAAAC/waiting-friends.gif", // Joey waiting
+            "https://media.tenor.com/vHqgC43mXgYAAAAC/friends-chandler.gif", // Chandler waiting
+            "https://media.tenor.com/fLz8oY6z-iUAAAAC/friends-ross-geller.gif" // Ross checking watch
+        ];
+
+        const waitingCaptions = [
+            "Nice try, but I am waiting... 😉",
+            "Still waiting... ⏱️",
+            "Are you really trying to press No? 🥺",
+            "Just click YES already! 😂",
+            "I can do this all day!"
+        ];
+
+        // --- GAME STATE ---
+        let currentQuestionIdx = 0;
+        let timer;
+        let timeLeft = 15;
+        let userAnswers = [];
+        let dodgeCount = 0;
+        const maxDodges = 10; 
+
+        // Wait a few seconds on the loading screen, then show Round 1
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                transitionSection('loading', 'round1');
+            }, 3000); // 3-second 'Initialization' wait
+        });
+
+        // Disable right-click
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Screen Focus / Cheat Detection
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                document.body.classList.add("blurred");
+                document.getElementById("blurOverlay").style.display = "flex";
+            } else {
+                document.body.classList.remove("blurred");
+                document.getElementById("blurOverlay").style.display = "none";
+            }
+        });
+
+        // 1. Verify Passcode
+        function verifyIdentity() {
+            const val = document.getElementById('passcodeInput').value.trim().toLowerCase();
+            const wrongFeedback = document.getElementById('wrongAnsFeedback');
+            
+            if (val === CORRECT_PASSCODE) {
+                wrongFeedback.style.display = 'none';
+                transitionSection('round1', 'passcodeSuccess');
+                setTimeout(() => {
+                    transitionSection('passcodeSuccess', 'round2');
+                    startTrivia();
+                }, 3500);
+            } else {
+                wrongFeedback.style.display = 'block';
+                wrongFeedback.style.animation = 'none';
+                void wrongFeedback.offsetWidth; 
+                wrongFeedback.style.animation = 'shake 0.3s ease';
+            }
+        }
+
+        // 2. Start Trivia Round
+        function startTrivia() {
+            if (currentQuestionIdx >= triviaQuestions.length) {
+                transitionSection('round2', 'proposal');
+                return;
+            }
+
+            const currentQ = triviaQuestions[currentQuestionIdx];
+            document.getElementById('questionNum').innerText = `Question ${currentQuestionIdx + 1} of ${triviaQuestions.length}`;
+            document.getElementById('questionText').innerText = currentQ.q;
+            
+            const optionsContainer = document.getElementById('quizOptions');
+            optionsContainer.innerHTML = '';
+
+            currentQ.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'button option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => selectAnswer(opt);
+                optionsContainer.appendChild(btn);
+            });
+
+            startTimer();
+        }
+
+        function startTimer() {
+            timeLeft = 15;
+            const progress = document.getElementById('timerProgress');
+            progress.style.width = '100%';
+            
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                progress.style.width = `${(timeLeft / 15) * 100}%`;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    selectAnswer("TIMED OUT");
+                }
+            }, 1000);
+        }
+
+        function selectAnswer(answer) {
+            clearInterval(timer);
+            userAnswers.push({
+                question: triviaQuestions[currentQuestionIdx].q,
+                selected: answer
+            });
+
+            const currentQ = triviaQuestions[currentQuestionIdx];
+
+            if (answer === currentQ.answer) {
+                const randGif = correctGifs[Math.floor(Math.random() * correctGifs.length)];
+                document.getElementById('celebrationGif').src = randGif;
+                transitionSection('round2', 'answerCelebration');
+                
+                setTimeout(() => {
+                    currentQuestionIdx++;
+                    transitionSection('answerCelebration', 'round2');
+                    startTrivia();
+                }, 2500);
+            } else {
+                currentQuestionIdx++;
+                startTrivia();
+            }
+        }
+
+        // 3. Dodge 'No' Button Logic
+        function dodgeButton(event) {
+            if (event) event.preventDefault(); 
+            
+            const noBtn = document.getElementById('noBtn');
+
+            if (dodgeCount < maxDodges) {
+                const x = Math.random() * (window.innerWidth - noBtn.offsetWidth);
+                const y = Math.random() * (window.innerHeight - noBtn.offsetHeight);
+                
+                noBtn.style.position = 'fixed';
+                noBtn.style.left = `${x}px`;
+                noBtn.style.top = `${y}px`;
+                
+                dodgeCount++;
+
+                if (dodgeCount > 1) {
+                    document.getElementById('teasingText').innerText = waitingCaptions[(dodgeCount - 2) % waitingCaptions.length];
+                    document.getElementById('waitingGifContainer').style.display = 'flex';
+                    document.getElementById('waitingGif').src = waitingGifs[(dodgeCount - 2) % waitingGifs.length];
+                }
+            } else {
+                document.getElementById('teasingText').innerText = "Fine... click it if you dare!";
+                noBtn.style.transition = 'none';
+                noBtn.onclick = () => submitDecision('NO');
+            }
+        }
+
+        // 4. Final Data Submission
+        function submitDecision(decision) {
+            document.getElementById('yesBtn').disabled = true;
+            document.getElementById('noBtn').disabled = true;
+
+            const finalData = {
+                passcodeUsed: document.getElementById('passcodeInput').value,
+                answers: JSON.stringify(userAnswers),
+                dateDecision: decision,
+                numberOfDodgesTriggered: dodgeCount
+            };
+
+            if (FORMSPREE_ID && FORMSPREE_ID !== "YOUR_FORMSPREE_ID_HERE") {
+                fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(finalData)
+                }).catch(err => console.log("Failed sending to Formspree: ", err));
+            }
+
+            if (decision === 'YES') {
+                transitionSection('proposal', 'outcomeYes');
+            } else {
+                transitionSection('proposal', 'outcomeNo');
+            }
+        }
+
+        // Helper: Section Transitions
+        function transitionSection(oldId, newId) {
+            document.getElementById(oldId).classList.remove('active');
+            document.getElementById(newId).classList.add('active');
+        }
+    </script>
+</body>
+</html>
